@@ -22,7 +22,7 @@ public class Utils {
 		try {
 			inputStream = new Scanner(new File(file));
 		} catch(FileNotFoundException e) {
-			System.out.println("Error opening the file" + file);
+			System.out.println("The file path does not exist. Please check your CLI argument! " + file);
 			System.exit(0);
 		}
 		
