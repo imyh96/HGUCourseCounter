@@ -7,8 +7,9 @@ import java.util.TreeMap;
 
 import edu.handong.analysis.datamodel.Course;
 import edu.handong.analysis.datamodel.Student;
-import edu.handong.analysise.utils.NotEnoughArgumentException;
-import edu.handong.analysise.utils.Utils;
+import edu.handong.analysis.utils.NotEnoughArgumentException;
+import edu.handong.analysis.utils.Utils;
+import java.util.Set;
 
 public class HGUCoursePatternAnalyzer {
 
@@ -53,10 +54,34 @@ public class HGUCoursePatternAnalyzer {
 	 * @return
 	 */
 	private HashMap<String,Student> loadStudentCourseRecords(ArrayList<String> lines) {
+		HashMap<String,Student> map = new HashMap<String,Student>();
+		String curr = null;
+		String prev = null;
+		String studentid = null;
 		
-		// TODO: Implement this method
+		for(int i = 0; i < lines.size(); i++) {
+			curr = lines.get(i).split(",")[0];
+			// put into the hashmap if it is different student
+			if(prev != curr) {
+				Student student = new Student(curr);
+				map.put(curr, student);
+			}
+			prev = curr;
+		}
 		
-		return null; // do not forget to return a proper variable.
+		//create course instance for each student instance
+		studentid = lines.get(0).split(",")[0];
+		
+		for(int i = 0; i < lines.size(); i++) {
+			curr = lines.get(i).split(",")[0];
+			if(studentid != curr) {
+				studentid = curr;
+			}
+			Course NewRecord = new Course(lines.get(i));
+			map.get(studentid).addCourse(NewRecord);
+		}
+		
+		return map; // do not forget to return a proper variable.
 	}
 
 	/**
@@ -74,8 +99,26 @@ public class HGUCoursePatternAnalyzer {
 	 */
 	private ArrayList<String> countNumberOfCoursesTakenInEachSemester(Map<String, Student> sortedStudents) {
 		
-		// TODO: Implement this method
+		ArrayList<String> result = new ArrayList<String>();
+		int idx = 1;
+		int allSmstr = 0;
+		int numOfClss = 0;
+		Set<String> ks = sortedStudents.keySet();
 		
-		return null; // do not forget to return a proper variable.
+		result.add(0, "StudentID, TotalNumberOfSemestersRegistered, Semester, NumCoursesTakenInTheSemester");
+		
+		for(String stdId : ks) {
+			
+			allSmstr = sortedStudents.get(stdId).getSemestersByYearAndSemester().size();
+			
+			for(int i = 1; i <= allSmstr; i++) {
+				numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i);
+				result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i) + "," + Integer.toString(numOfClss));
+				idx++;
+			}
+		}
+		
+		
+		return result; // do not forget to return a proper variable.
 	}
 }
