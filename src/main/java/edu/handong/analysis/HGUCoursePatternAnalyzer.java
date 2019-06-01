@@ -33,6 +33,10 @@ public class HGUCoursePatternAnalyzer {
 		
 		String dataPath = args[0]; // csv file to be analyzed
 		String resultPath = args[1]; // the file path where the results are saved.
+		
+		String startYear = args[2];
+		String endYear = args[3];
+		
 		ArrayList<String> lines = Utils.getLines(dataPath, true);
 		
 		students = loadStudentCourseRecords(lines);
@@ -41,7 +45,7 @@ public class HGUCoursePatternAnalyzer {
 		Map<String, Student> sortedStudents = new TreeMap<String,Student>(students); 
 		
 		// Generate result lines to be saved.
-		ArrayList<String> linesToBeSaved = countNumberOfCoursesTakenInEachSemester(sortedStudents);
+		ArrayList<String> linesToBeSaved = countNumberOfCoursesTakenInEachSemester(sortedStudents, startYear, endYear);
 		
 		// Write a file (named like the value of resultPath) with linesTobeSaved.
 		Utils.writeAFile(linesToBeSaved, resultPath);
@@ -97,25 +101,81 @@ public class HGUCoursePatternAnalyzer {
 	 * @param sortedStudents
 	 * @return
 	 */
-	private ArrayList<String> countNumberOfCoursesTakenInEachSemester(Map<String, Student> sortedStudents) {
+	private ArrayList<String> countNumberOfCoursesTakenInEachSemester(Map<String, Student> sortedStudents, String startYear, String endYear) {
 		
 		ArrayList<String> result = new ArrayList<String>();
 		int idx = 1;
 		int allSmstr = 0;
 		int numOfClss = 0;
-		Set<String> ks = sortedStudents.keySet();
+		Set<String> ks = sortedStudents.keySet(); // store keys of HashMap 'sortedStudents' 
+		
+		Map<String, Integer> tempHash = null;
+		int sta = 0;
+		int end = 0;
+		int size = 0;
+		int diff = 0;
+		int sDiff = 0;
+		int eDiff = 0;
 		
 		result.add(0, "StudentID, TotalNumberOfSemestersRegistered, Semester, NumCoursesTakenInTheSemester");
 		
 		for(String stdId : ks) {
+			size = sortedStudents.get(stdId).getSemestersByYearAndSemester().size();
+			sta = (sortedStudents.get(stdId).getYearOfNthSemester(1)) - Integer.parseInt(startYear);
+			end = Integer.parseInt(endYear) - (sortedStudents.get(stdId).getYearOfNthSemester(size));
 			
-			allSmstr = sortedStudents.get(stdId).getSemestersByYearAndSemester().size();
-			
-			for(int i = 1; i <= allSmstr; i++) {
-				numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i);
-				result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i) + "," + Integer.toString(numOfClss));
-				idx++;
+			if(sta >= 0 && end >= 0) { //case 1 : 
+				allSmstr = sortedStudents.get(stdId).getSemestersByYearAndSemester().size();
+				
+				for(int i = 1; i <= allSmstr; i++) {
+					numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i);
+					result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i) + "," + Integer.toString(numOfClss));
+					idx++;
+				}
+				
+			}else if(sta < 0 && end >= 0) { //case 2:
+				tempHash = sortedStudents.get(stdId).getSemestersByYearAndSemester();
+				
+				diff = (tempHash.get(startYear + "-1")) - 1;
+				allSmstr = size - diff;
+				
+				for(int i = 1; i <= allSmstr; i++) {
+					numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i + diff);
+					result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i) + "," + Integer.toString(numOfClss));
+					idx++;
+				}
+			}else if(sta >= 0 && end < 0) { // case 3:
+				int ey = Integer.parseInt(endYear) + 1;
+				
+				tempHash = (Map<String, Integer>)sortedStudents.get(stdId).getSemestersByYearAndSemester().clone();
+				allSmstr = sortedStudents.get(stdId).getSemestersByYearAndSemester().size();
+				String tempString = String.valueOf(ey) + "-1";
+				int tempor = tempHash.get(tempString) - 1;
+				diff = size - tempor;
+				allSmstr = allSmstr - diff;
+				
+				for(int i = 1; i <= allSmstr; i++) {
+					numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i);
+					result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i) + "," + Integer.toString(numOfClss));
+					idx++;
+				}
+				
+			}else { // case 4:
+				tempHash = (Map<String, Integer>)sortedStudents.get(stdId).getSemestersByYearAndSemester().clone();
+				int ey = Integer.parseInt(endYear) + 1;
+				String tempstring = startYear + "-" + "1";
+				sDiff = (tempHash.get(tempstring)) - 1;
+				eDiff = size - ((tempHash.get(String.valueOf(ey) + "-1")) - 1);
+				
+				allSmstr = size - eDiff - sDiff;
+				
+				for(int i = 1 + sDiff; i <= size - eDiff; i++) {
+					numOfClss = sortedStudents.get(stdId).getNumCourseInNthSemester(i);
+					result.add(idx, stdId + "," + Integer.toString(allSmstr) + "," + Integer.toString(i - sDiff) + "," + Integer.toString(numOfClss));
+					idx++;
+				}
 			}
+			
 		}
 		
 		

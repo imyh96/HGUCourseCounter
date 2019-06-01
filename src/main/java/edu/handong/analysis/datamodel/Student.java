@@ -25,17 +25,6 @@ public class Student {
 		String curr = null;
 		int size = coursesTaken.size();
 		
-		/* 여러개 HashMap에 집어넣기 $$불가능함.
-		for(int i = 0, j = 1; i <= coursesTaken.size(); i++) {
-			curr = coursesTaken.get(i).getyearTaken() + "-" + coursesTaken.get(i).getsemesterCourseTaken();
-			semestersByYearAndSemester.put(curr, j);
-			if(prev != null && curr != prev) {
-				j++;
-			}
-			prev = curr;
-		}
-		*/
-		
 		// 하나씩 HashMap에 집어넣기
 		for(int i = 0, j = 1; i < size; i++) {
 			curr = Integer.toString(coursesTaken.get(i).getyearTaken()) + "-" + Integer.toString(coursesTaken.get(i).getsemesterCourseTaken());
@@ -73,6 +62,25 @@ public class Student {
 		}
 		
 		return cnt;
+	}
+	
+	public int getYearOfNthSemester(int semester) {
+		Set<String> ks = semestersByYearAndSemester.keySet();
+		int year = 0;
+		
+		// get year number for passed Nth semester
+		for(String n : ks) { 
+			if(semestersByYearAndSemester.get(n) == semester) {
+				year = Integer.parseInt(n.split("-")[0]);
+				break;
+			}	
+		}
+		
+		return year;
+	}
+	
+	public int getsemestersByYearAndSemester(String key) {
+		return semestersByYearAndSemester.get(key);
 	}
 
 }
